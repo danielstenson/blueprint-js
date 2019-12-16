@@ -11,6 +11,7 @@ import {cornerTolerance} from '../core/configuration.js';
 import {HalfEdge} from './half_edge.js';
 import {Corner} from './corner.js';
 import {Wall} from './wall.js';
+import {Item} from './item.js';
 import {Room} from './room.js';
 
 /** */
@@ -33,6 +34,13 @@ export class Floorplan extends EventDispatcher
 		 * @type {Wall[]}
 		 */
 		this.walls = [];
+		/**
+		 * List of elements of Item instance
+		 * 
+		 * @property {Item[]} walls Array of walls
+		 * @type {Item[]}
+		 */
+		this.items = [];
 		/**
 		 * List of elements of Corner instance
 		 * 
@@ -306,6 +314,25 @@ export class Floorplan extends EventDispatcher
 		return wall;
 	}
 
+	/**
+	 * Creates a new item.
+	 * 
+	 * @param {Corner}
+	 *            start The start corner.
+	 * @param {Corner}
+	 *            end The end corner.
+	 * @returns {Wall} The new wall.
+	 */
+	newItem(name, xpos, ypos)
+	{
+		var item = new Item(name, xpos, ypos);
+		
+		this.items.push(item);
+		this.dispatchEvent({type: EVENT_NEW, item: this, newItem: item});
+		this.update();
+		return item;
+	}
+
 
 
 	/**
@@ -395,6 +422,16 @@ export class Floorplan extends EventDispatcher
 	getWalls()
 	{
 		return this.walls;
+	}
+
+	/**
+	 * Gets the items.
+	 * 
+	 * @return {Item[]}
+	 */
+	getItems()
+	{
+		return this.items;
 	}
 
 	/**
@@ -615,7 +652,7 @@ export class Floorplan extends EventDispatcher
 	 * @return {void}
 	 * @emits {EVENT_LOADED}
 	 */
-	loadFloorplan(floorplan)
+	loadFloorplan(floorplan, items)
 	{
 		this.reset();		
 		var corners = {};
@@ -659,6 +696,21 @@ export class Floorplan extends EventDispatcher
 					newWall.wallType = WallTypes.STRAIGHT;
 				}
 			}
+		});
+
+		items.forEach((item) => {
+			// 2D version
+			var newItem = scope.newItem(item.item_name, item.xpos, item.ypos);
+			// 3D version
+			if (item.material_colors) {
+				newItem.material_colors = item.material_colors;
+			}
+
+			var matColors = (item.material_colors) ? item.material_colors : [];
+			var position = new Vector3(item.xpos, item.ypos, item.zpos);
+			var metadata = {itemName: item.item_name,resizable: item.resizable,format: item.format, itemType: item.item_type, modelUrl: item.model_url, materialColors: matColors};
+			var scale = new Vector3(item.scale_x,item.scale_y,item.scale_z);
+			this.scene.addItem(item.item_type,item.model_url,metadata,position,item.rotation,scale,item.fixed);
 		});
 
 		if ('newFloorTextures' in floorplan)

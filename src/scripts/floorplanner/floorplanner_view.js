@@ -30,6 +30,11 @@ export const wallColor = '#dddddd';
 export const wallColorHover = '#008cba';
 export const wallColorSelected = '#00ba8c';
 
+// item config
+export const itemColor = '#dddddd';
+export const itemColorHover = '#008cba';
+export const itemColorSelected = '#00ba8c';
+
 export const edgeColor = '#888888';
 export const edgeColorHover = '#008cba';
 export const edgeWidth = 1;
@@ -118,8 +123,8 @@ export class FloorplannerView2D
 		// this.context.globalAlpha = 0.3;
 		this.floorplan.getRooms().forEach((room) => {this.drawRoom(room);});
 		// this.context.globalAlpha = 1.0;
-
 		this.floorplan.getWalls().forEach((wall) => {this.drawWall(wall);});
+		this.floorplan.getItems().forEach((item) => { console.log(item); this.drawItem(item); });
 		this.floorplan.getCorners().forEach((corner) => {
 			this.drawCorner(corner);
 //			this.drawCornerAngles(corner);
@@ -478,6 +483,30 @@ export class FloorplannerView2D
 	}
 
 	/** */
+	drawItem(item)
+	{
+		var selected = (item === this.viewmodel.selectedItem);
+		var hover = (item === this.viewmodel.activeItem && item != this.viewmodel.selectedItem);
+		var color = itemColor;
+		
+		if (hover && this.viewmodel.mode == floorplannerModes.DELETE)
+		{
+			color = deleteColor;
+		}				
+		else if (hover)
+		{
+			color = itemColorHover;
+		}
+		
+		else if(selected)
+		{
+			color = itemColorSelected;
+		}
+
+		this.drawRect(item.xpos, item.ypos, 100, 100, color)
+	}
+
+	/** */
 	drawRoom(room)
 	{
 //		var scope = this;
@@ -716,6 +745,16 @@ export class FloorplannerView2D
 	{
 		this.context.beginPath();
 		this.context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+		this.context.closePath();
+		this.context.fillStyle = fillColor;
+		this.context.fill();
+	}
+
+	/** */
+	drawRect(x, y, width, height, fillColor)
+	{
+		this.context.beginPath();
+		this.context.rect(x, y, width, height);
 		this.context.closePath();
 		this.context.fillStyle = fillColor;
 		this.context.fill();
